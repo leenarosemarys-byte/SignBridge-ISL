@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sigml>
+  <hns_sign gloss="computer">
+    <hamnosys_nonmanual/>
+    <hamnosys_manual>
+      <hamsymmlr/>
+      <hamfinger2345/>
+      <hamthumboutmod/>
+      <hamfingerstraightmod/>
+      <hamextfingero/>
+      <hampalmd/>
+      <hamparbegin/>
+      <hammoveu/>
+      <hamplus/>
+      <hammoveu/>
+      <hamparend/>
+      <hamclose/>
+      <hamfingerplay/>
+    </hamnosys_manual>
+  </hns_sign>
+</sigml>

@@ -1,0 +1,8 @@
+{
+  "description" : "CWASA client configuration - ISL Project",
+  "avSettings" : [
+    {
+      "initAv" : "marc"
+    }
+  ]
+}

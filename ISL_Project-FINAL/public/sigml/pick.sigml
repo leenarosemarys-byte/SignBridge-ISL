@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sigml>
+  <hns_sign gloss="pick">
+    <hamnosys_nonmanual/>
+    <hamnosys_manual>
+      <hamcee12/>
+      <hamextfingero/>
+      <hampalmd/>
+      <hamchest/>
+    </hamnosys_manual>
+  </hns_sign>
+</sigml>

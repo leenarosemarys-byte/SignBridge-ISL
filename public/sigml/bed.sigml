@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sigml>
+  <hns_sign gloss="bed">
+    <hamnosys_nonmanual/>
+    <hamnosys_manual>
+      <hamcee12/>
+      <hamthumbopenmod/>
+      <hamextfingeru/>
+      <hampalml/>
+      <hamhead/>
+      <hambetween/>
+      <hamearlobe/>
+      <hamclose/>
+    </hamnosys_manual>
+  </hns_sign>
+</sigml>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Conversation - Watching - ISL Project</title>
+<link rel="stylesheet" href="style.css?v=9" />
+<style>
+  .watch-panel { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; max-width: 1100px; margin: 0 auto; padding: 24px 32px 0; }
+  .watch-side { flex: 1; min-width: 300px; }
+  .room-code-pill {
+    display: inline-block; font-family: var(--font-mono); font-size: 13px;
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: 20px;
+    padding: 6px 14px; color: var(--slate); margin-bottom: 16px;
+  }
+  .transcript {
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: 16px; height: 220px; overflow-y: auto; margin-top: 20px; font-size: 14px;
+  }
+  .transcript .msg { margin-bottom: 10px; line-height: 1.4; }
+  .transcript .msg .who { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .transcript .msg.deaf .who { color: var(--teal); }
+  .transcript .msg.hearing .who { color: var(--marigold-d); }
+  .transcript .empty-hint { color: var(--slate); font-size: 13px; }
+  .reply-row { display: flex; gap: 8px; margin-top: 14px; }
+  .reply-row input {
+    flex: 1; font-size: 14px; padding: 10px 12px; border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm); font-family: var(--font-body);
+  }
+</style>
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home">Home</a>
+    <a href="connect.html" data-nav="conversation" class="active">Conversation</a>
+    <a href="contact.html" data-nav="contact">Contact Us</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <h1 class="app-heading">You're watching</h1>
+
+  <div class="watch-panel">
+    <div class="watch-side">
+      <div class="room-code-pill">Conversation code: <strong id="roomCodeLabel"></strong></div>
+      <div id="statusMsg" class="status"></div>
+
+      <div class="transcript" id="transcript">
+        <div class="empty-hint">Your replies will appear here. Incoming messages are shown only through the avatar, not as text.</div>
+      </div>
+
+      <div class="reply-row">
+        <input type="text" id="replyInput" placeholder="Type a reply..." />
+        <button id="replyBtn">Send</button>
+      </div>
+    </div>
+
+    <div class="avatar-area">
+      <iframe id="avatarFrame" src="avatar/SiGML%20Signing%20App%20Gui_%20vhg.2026.html"></iframe>
+      <div id="avatarLoadingCover">Loading avatar&hellip;</div>
+    </div>
+  </div>
+
+  <div class="speed-control">
+    <span class="speed-label">Avatar speed:</span>
+    <button id="speedDownBtn" class="speed-btn" title="Slower">−</button>
+    <span id="speedDisplay" class="speed-display">−1.0</span>
+    <button id="speedUpBtn" class="speed-btn" title="Faster">+</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const roomCode = (params.get("room") || "").toUpperCase();
+    document.getElementById("roomCodeLabel").textContent = roomCode || "(none)";
+
+    const statusEl = document.getElementById("statusMsg");
+    const transcriptEl = document.getElementById("transcript");
+    const iframe = document.getElementById("avatarFrame");
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    // --- Same avatar-panel-hiding logic used on app.html ---
+    function hideAvatarControls() {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc || !doc.body) return false;
+        if (doc.getElementById("__isl_hide_style__")) {
+          document.getElementById("avatarLoadingCover")?.remove();
+          return true;
+        }
+        const style = doc.createElement("style");
+        style.id = "__isl_hide_style__";
+        style.textContent = `.divCtrlPanel { display: none !important; } h3 { display: none !important; }`;
+        doc.head.appendChild(style);
+        document.getElementById("avatarLoadingCover")?.remove();
+        return true;
+      } catch (e) { return false; }
+    }
+    hideAvatarControls();
+    iframe.addEventListener("load", hideAvatarControls);
+    let hideAttempts = 0;
+    const hideRetryTimer = setInterval(() => {
+      hideAttempts++;
+      if (hideAvatarControls() || hideAttempts > 20) clearInterval(hideRetryTimer);
+    }, 250);
+
+    // --- Manual speed control ---
+    const speedDisplay = document.getElementById("speedDisplay");
+
+    function readCurrentSpeed() {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const field = doc.querySelector("input.txtLogSpeed.av0");
+        return field ? field.value : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    function updateSpeedDisplay() {
+      const val = readCurrentSpeed();
+      if (val !== null && speedDisplay) speedDisplay.textContent = val;
+    }
+    function clickSpeedButton(direction) {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const selector = direction === "up" ? "input.bttnSpeedUp.av0" : "input.bttnSpeedDown.av0";
+        const btn = doc.querySelector(selector);
+        if (!btn) return false;
+        btn.click();
+        updateSpeedDisplay();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+    document.getElementById("speedUpBtn").addEventListener("click", () => clickSpeedButton("up"));
+    document.getElementById("speedDownBtn").addEventListener("click", () => clickSpeedButton("down"));
+
+    function slowDownOnce() {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc || !doc.body) return false;
+        const btn = doc.querySelector("input.bttnSpeedDown.av0");
+        if (!btn) return false;
+        if (btn.dataset.__islSpeedSet === "1") {
+          updateSpeedDisplay();
+          return true;
+        }
+        btn.click();
+        btn.dataset.__islSpeedSet = "1";
+        updateSpeedDisplay();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+    slowDownOnce();
+    iframe.addEventListener("load", slowDownOnce);
+    let speedAttempts = 0;
+    const speedRetryTimer = setInterval(() => {
+      speedAttempts++;
+      if (slowDownOnce() || speedAttempts > 20) clearInterval(speedRetryTimer);
+    }, 250);
+
+    function playInAvatar(sigmlText) {
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const textarea = doc.querySelector("textarea.txtaSiGMLText.av0") || doc.querySelector("textarea");
+      const playButton = doc.querySelector("input.bttnPlaySiGMLText.av0");
+      if (!textarea || !playButton || playButton.disabled) return false;
+      textarea.value = sigmlText;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.dispatchEvent(new Event("change", { bubbles: true }));
+      playButton.click();
+      return true;
+    }
+
+    // --- Watch the avatar's own real status field to know exactly when
+    // playback actually finishes, instead of guessing with a fixed timer.
+    // This is the same text you see in the browser console as
+    // "Status : [av0] Playing complete". ---
+    function waitForPlaybackToFinish() {
+      return new Promise((resolve) => {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const statusField = doc.querySelector("input.statusExtra.av0");
+        const startedAt = Date.now();
+        const maxWaitMs = 20000; // safety cap so we never hang forever
+        const poll = setInterval(() => {
+          const val = (statusField && statusField.value || "").toLowerCase();
+          const timedOut = Date.now() - startedAt > maxWaitMs;
+          if (val.includes("complete") || timedOut) {
+            clearInterval(poll);
+            resolve();
+          }
+        }, 150);
+      });
+    }
+
+    // --- Queue incoming sign messages so they play one after another,
+    // instead of overlapping if several arrive close together. If the
+    // avatar isn't ready yet, retry the SAME message shortly instead of
+    // dropping it. Each queue entry is {glosses, sigml} -- sigml comes
+    // ready-made from the server (HamNoSys lookup + conversion already
+    // happened there), so this side just has to play it. ---
+    const signQueue = [];
+    let playing = false;
+    async function processQueue() {
+      if (playing || signQueue.length === 0) return;
+      playing = true;
+      const entry = signQueue[0]; // peek only — don't remove until it actually plays
+      const started = playInAvatar(entry.sigml);
+      if (!started) {
+        setStatus("Avatar still loading — will retry automatically...");
+        playing = false;
+        setTimeout(processQueue, 500); // try the same message again shortly
+        return;
+      }
+      signQueue.shift(); // now safe to remove, since it actually started playing
+      setStatus(`Playing: ${entry.glosses.join(", ")}`);
+      await waitForPlaybackToFinish(); // waits exactly as long as it actually takes
+      playing = false;
+      processQueue();
+    }
+
+    // Only the DEAF user's own replies are shown as text here — the
+    // incoming hearing-side message is intentionally NOT shown as text,
+    // since the whole point is that it's conveyed through the avatar's
+    // sign performance instead.
+    function renderMessage(m) {
+      if (m.from !== "deaf") return;
+      transcriptEl.querySelector(".empty-hint")?.remove();
+      const div = document.createElement("div");
+      div.className = "msg " + m.from;
+      div.innerHTML = `<span class="who">You</span><br>${m.text}`;
+      transcriptEl.appendChild(div);
+      transcriptEl.scrollTop = transcriptEl.scrollHeight;
+    }
+
+    let seenCount = 0;
+    async function pollMessages() {
+      if (!roomCode) return;
+      try {
+        const res = await fetch(`/api/rooms/${roomCode}/messages?since=${seenCount}`);
+        const data = await res.json();
+        if (res.ok && data.messages.length > 0) {
+          data.messages.forEach(m => {
+            renderMessage(m);
+            if (m.from === "hearing" && m.sigml && m.glosses && m.glosses.length > 0) {
+              signQueue.push({ glosses: m.glosses, sigml: m.sigml });
+              processQueue();
+            }
+          });
+          seenCount = data.total;
+        }
+      } catch (e) { /* silent retry on next tick */ }
+    }
+    setInterval(pollMessages, 1500);
+    pollMessages();
+
+    document.getElementById("replyBtn").addEventListener("click", async () => {
+      const input = document.getElementById("replyInput");
+      const text = input.value;
+      if (!text.trim() || !roomCode) return;
+      try {
+        const res = await fetch(`/api/rooms/${roomCode}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ from: "deaf", text })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          seenCount = data.total;
+          renderMessage({ from: "deaf", text });
+          input.value = "";
+        }
+      } catch (e) { /* leave text in box so they can retry */ }
+    });
+
+    fetch("/api/me").then(r => r.json()).then(data => {
+      if (!data.loggedIn) { window.location.href = "login.html"; return; }
+      const el = document.getElementById("navAuthArea");
+      el.innerHTML = `Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+      document.getElementById("logoutLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        fetch("/api/logout", { method: "POST" }).then(() => { window.location.href = "login.html"; });
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- saved from url=(0069)https://vhg.cmp.uea.ac.uk/tech/jas/vhg2026/SiGML-Player-Orig-gui.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<title>SiGML Signing App Gui: vhg.2026</title>
+
+<meta http-equiv="Access-Control-Allow-Methods" content="GET">
+
+<!-- CWA @ vhg.cmp.uea.ac.uk/tech/jas/vhg2026 -->
+
+<link rel="stylesheet" href="./SiGML Signing App Gui_ vhg.2026_files/cwasa.css">
+<script type="text/javascript" src="./SiGML Signing App Gui_ vhg.2026_files/allcsa.js"></script>
+
+</head>
+
+<body onload="CWASA.init();">
+<div><div class="empty">
+<h3>Original Electron SiGML-Player. JASigning: vhg.2026</h3>
+<br>
+<table align="center">
+<tbody><tr>
+
+<td align="left" valign="center" width="600" height="720">
+	<!-- CWA signing avatar 0 -->
+	<div class="CWASAAvatar av0" align="center"><div class="divAv av0">
+<canvas class="canvasAv av0" ondragstart="return false" width="600" height="720"></canvas>
+</div>  <!--class="divAv av0"--></div>
+</td>
+
+<td></td>
+
+<td align="center" valign="center">
+
+<!--================================================================-->
+<!-- Bespoke signing avatar GUI 0 -->
+<!--================================================================-->
+
+<div class="divCtrlPanel">
+
+<!-- Avatar Menu -->
+Avatar: <span class="CWASAAvMenu av0"><select class="menuAv av0">
+<option value="anna">anna</option>
+<option value="marc" selected="selected">marc</option>
+<option value="francoise">francoise</option>
+<option value="luna">luna</option>
+<option value="siggi">siggi</option>
+</select></span>
+<br>
+
+<br>
+
+<!-- Speed Buttons -->
+Speed (log<sub>2</sub> scale):
+<input class="txtLogSpeed av0" value="+1.0" type="text">
+
+<input type="button" value="-" class="bttnSpeedDown av0">
+<input type="button" value="+" class="bttnSpeedUp av0">
+<input type="button" value="Reset" class="bttnSpeedReset av0" disabled="">
+
+<hr>
+
+<!-- SiGML URL -->
+SiGML URL:<br>
+<input class="txtSiGMLURL av0" value="welkom-ngt.sigml" type="text">
+
+<br>
+
+<!-- SiGML Text -->
+SiGML Text:<br>
+<textarea class="txtaSiGMLText av0" rows="4">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;sigml&gt;
+
+&lt;hns_sign gloss="mug"&gt;
+  &lt;hamnosys_nonmanual&gt;
+    &lt;hnm_mouthpicture picture="mVg"/&gt;
+  &lt;/hamnosys_nonmanual&gt;
+  &lt;hamnosys_manual&gt;
+    &lt;hamfist/&gt; &lt;hamthumbacrossmod/&gt;
+        &lt;hamextfingerol/&gt; &lt;hampalml/&gt;
+    &lt;hamshoulders/&gt;
+    &lt;hamparbegin/&gt; &lt;hammoveu/&gt; &lt;hamarcu/&gt;
+        &lt;hamreplace/&gt; &lt;hamextfingerul/&gt; &lt;hampalmdl/&gt;
+    &lt;hamparend/&gt;
+  &lt;/hamnosys_manual&gt;
+&lt;/hns_sign&gt;
+
+&lt;hns_sign gloss="take"&gt;
+  &lt;hamnosys_nonmanual&gt;
+    &lt;hnm_mouthpicture picture="te_Ik"/&gt;
+  &lt;/hamnosys_nonmanual&gt;
+  &lt;hamnosys_manual&gt;
+    &lt;hamceeall/&gt; &lt;hamextfingerol/&gt; &lt;hampalml/&gt;
+    &lt;hamlrbeside/&gt; &lt;hamshoulders/&gt; &lt;hamarmextended/&gt;
+    &lt;hamreplace/&gt; &lt;hamextfingerl/&gt; &lt;hampalml/&gt;
+    &lt;hamchest/&gt; &lt;hamclose/&gt;
+  &lt;/hamnosys_manual&gt;
+&lt;/hns_sign&gt;
+
+&lt;hns_sign gloss="i"&gt;
+  &lt;hamnosys_nonmanual&gt;
+    &lt;hnm_mouthpicture picture="a_I"/&gt;
+  &lt;/hamnosys_nonmanual&gt;
+  &lt;hamnosys_manual&gt;
+    &lt;hamfinger2/&gt; &lt;hamthumbacrossmod/&gt;
+    &lt;hamextfingeril/&gt; &lt;hampalmr/&gt;
+    &lt;hamchest/&gt; &lt;hamtouch/&gt;
+  &lt;/hamnosys_manual&gt;
+&lt;/hns_sign&gt;
+
+&lt;/sigml&gt;
+</textarea>
+
+<br>
+
+<!-- Avatar/Play/Stop BUTTONS -->
+<input type="button" value="Play SiGML URL" class="bttnPlaySiGMLURL av0">
+<input type="button" value="Play SiGML Text" class="bttnPlaySiGMLText av0">
+&nbsp;
+<input type="button" value="Stop" class="bttnStop av0" disabled="">
+
+<br>
+
+<input value="Suspend" class="bttnSuspend av0" type="button" disabled="">
+<input value="Resume" class="bttnResume av0" type="button" disabled="">
+&nbsp;
+Frames:
+<input value="+1" class="bttnNextF av0" type="button" disabled="">
+<input value="-1" class="bttnPrevF av0" type="button" disabled="">
+
+<hr>
+
+<!-- Progress and Status -->
+<span style="font-size: 90%;">
+Sign/Frame:
+<input class="txtSF av0" value="0/0" type="text">
+&nbsp;
+Gloss:
+<input class="txtGloss av0" value="[none]" type="text">
+&nbsp;
+FPS:
+<input class="txtFPS av0" value="00.00" type="text">
+<br>
+
+Status:
+<input type="text" class="statusExtra av0">
+</span>
+
+</div>
+<!--================================================================-->
+
+</td>
+</tr>
+</tbody></table>
+</div>
+
+<!-- End of CWASA page -->
+
+</div>
+
+
+
+
+</body></html>

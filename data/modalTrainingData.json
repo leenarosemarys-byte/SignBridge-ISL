@@ -1,0 +1,122 @@
+[
+  {
+    "id": "modal-seed-001",
+    "sentence": "Will you come tomorrow?",
+    "modal": "will",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-002",
+    "sentence": "Could you help me?",
+    "modal": "could",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-003",
+    "sentence": "Will it rain today?",
+    "modal": "will",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-004",
+    "sentence": "Could this be true?",
+    "modal": "could",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-005",
+    "sentence": "She will not go to school.",
+    "modal": "will",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-006",
+    "sentence": "I could not sleep last night.",
+    "modal": "could",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-007",
+    "sentence": "He will not eat that.",
+    "modal": "will",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-008",
+    "sentence": "They could not come to market.",
+    "modal": "could",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-009",
+    "sentence": "Could you say that again?",
+    "modal": "could",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-010",
+    "sentence": "Will she think about it?",
+    "modal": "will",
+    "label": "keep"
+  },
+  {
+    "id": "modal-seed-011",
+    "sentence": "I will go home.",
+    "modal": "will",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-012",
+    "sentence": "She will eat later.",
+    "modal": "will",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-013",
+    "sentence": "We will think about it.",
+    "modal": "will",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-014",
+    "sentence": "They will go to market.",
+    "modal": "will",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-015",
+    "sentence": "I will sleep now.",
+    "modal": "will",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-016",
+    "sentence": "He will come later.",
+    "modal": "will",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-017",
+    "sentence": "The girl could sleep well.",
+    "modal": "could",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-018",
+    "sentence": "My brother could eat a lot.",
+    "modal": "could",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-019",
+    "sentence": "She could think clearly.",
+    "modal": "could",
+    "label": "drop"
+  },
+  {
+    "id": "modal-seed-020",
+    "sentence": "We could go later.",
+    "modal": "could",
+    "label": "drop"
+  }
+]

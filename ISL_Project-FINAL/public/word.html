@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Word Signs - ISL Project</title>
+<link rel="stylesheet" href="style.css?v=9" />
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home">Home</a>
+    <a href="connect.html" data-nav="conversation">Conversation</a>
+    <a href="contact.html" data-nav="contact">Contact Us</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <div class="empty-state">
+    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <path d="M4 6h16M4 12h10M4 18h13"/>
+    </svg>
+    <h1>Word signs</h1>
+    <p class="tagline">
+      English words to ISL sign animation is coming soon.
+    </p>
+    <a href="connect.html" class="cta-button">Start a conversation</a>
+  </div>
+
+  <script>
+    fetch("/api/me")
+      .then(r => r.json())
+      .then(data => {
+        const el = document.getElementById("navAuthArea");
+        if (data.loggedIn) {
+          el.innerHTML = `Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+          document.getElementById("logoutLink").addEventListener("click", (e) => {
+            e.preventDefault();
+            fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+          });
+        } else {
+          el.innerHTML = `<a href="login.html">Login</a> | <a href="signup.html">Sign Up</a>`;
+        }
+      });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ISL Text/Voice to Sign Animation</title>
+<link rel="stylesheet" href="style.css?v=10" />
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home">Home</a>
+    <a href="connect.html" data-nav="conversation">Conversation</a>
+    <a href="contact.html" data-nav="contact">Contact Us</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <main class="app-shell">
+    <section class="hero glass-panel">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Translator Studio</div>
+        <h1>Turn text or voice into expressive ISL.</h1>
+        <p class="tagline">
+          Enter a word, phrase, or sentence and let the avatar render a polished sign sequence in real time.
+        </p>
+        <div class="hero-highlights">
+          <span>Voice input supported</span>
+          <span>Live avatar playback</span>
+          <span>Gloss preview</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="orb orb-one"></div>
+        <div class="orb orb-two"></div>
+        <div class="hero-visual-card">
+          <div class="mini-stat"><span>Animation</span><strong>Live</strong></div>
+          <div class="signal-line"></div>
+          <div class="mini-stat"><span>Mode</span><strong>Text / voice</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel">
+      <div class="input-area">
+        <div class="input-card glass-panel">
+          <div class="input-box-wrapper">
+            <textarea id="userInput" rows="3" placeholder="e.g. 5   or   2 9 0"></textarea>
+            <button id="micBtn" class="mic-icon-btn" title="Speak">🎤</button>
+          </div>
+
+          <div class="buttons">
+            <button id="playBtn">Play</button>
+          </div>
+
+          <div class="speed-control">
+            <span class="speed-label">Avatar speed:</span>
+            <button id="speedDownBtn" class="speed-btn" title="Slower">−</button>
+            <span id="speedDisplay" class="speed-display">−1.0</span>
+            <button id="speedUpBtn" class="speed-btn" title="Faster">+</button>
+          </div>
+
+          <div id="statusMsg" class="status"></div>
+
+          <h3>Recognized Input</h3>
+          <div id="textOnlyBox" class="output-box">&nbsp;</div>
+
+          <h3>Sign Sequence (Glosses)</h3>
+          <div id="glossBox" class="output-box">&nbsp;</div>
+        </div>
+      </div>
+
+      <div class="avatar-area glass-panel">
+        <iframe id="avatarFrame" src="avatar/SiGML%20Signing%20App%20Gui_%20vhg.2026.html"></iframe>
+        <div id="avatarLoadingCover">Loading avatar…</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    fetch("/api/me")
+      .then(r => r.json())
+      .then(data => {
+        if (!data.loggedIn) {
+          window.location.href = "login.html";
+          return;
+        }
+        const el = document.getElementById("navAuthArea");
+        const adminLink = data.isAdmin ? `<a href="admin.html">Admin</a> | ` : "";
+        el.innerHTML = `${adminLink}Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+        document.getElementById("logoutLink").addEventListener("click", (e) => {
+          e.preventDefault();
+          fetch("/api/logout", { method: "POST" }).then(() => {
+            window.location.href = "login.html";
+          });
+        });
+      });
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Admin - HamNoSys Database - ISL Project</title>
+<link rel="stylesheet" href="style.css?v=9" />
+<style>
+  .admin-wrap { max-width: 1000px; margin: 0 auto; padding: 24px 32px 64px; }
+  .admin-grid { display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 860px) { .admin-grid { grid-template-columns: 1fr; } }
+
+  .admin-panel {
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: 20px;
+  }
+  .admin-panel h2 { margin-top: 0; font-family: var(--font-display); font-size: 20px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px;
+  }
+  .field textarea { font-family: var(--font-mono); font-size: 13px; min-height: 90px; resize: vertical; }
+  .field .hint { font-size: 12px; color: var(--slate); margin-top: 4px; }
+
+  .row-btns { display: flex; gap: 10px; margin-top: 4px; }
+
+  .preview-box {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 10px; font-family: var(--font-mono); font-size: 12px; white-space: pre-wrap;
+    word-break: break-word; max-height: 220px; overflow-y: auto; margin-top: 4px;
+  }
+
+  table.signs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.signs-table th, table.signs-table td {
+    text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top;
+  }
+  table.signs-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--slate); }
+  table.signs-table td.tokens { font-family: var(--font-mono); font-size: 11px; color: var(--slate); max-width: 260px; }
+  table.signs-table .type-pill {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+    background: var(--paper); border: 1px solid var(--line);
+  }
+  table.signs-table .row-actions { white-space: nowrap; }
+  table.signs-table .row-actions button {
+    border: none; background: none; cursor: pointer; font-size: 12px; font-weight: 600;
+    padding: 4px 6px; border-radius: 4px;
+  }
+  table.signs-table .row-actions .edit-btn { color: var(--teal); }
+  table.signs-table .row-actions .delete-btn { color: var(--error); }
+
+  .search-row { margin-bottom: 12px; }
+  .search-row input { max-width: 260px; }
+
+  .gate-message { max-width: 500px; margin: 60px auto; text-align: center; }
+</style>
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home">Home</a>
+    <a href="app.html" data-nav="try">Try System Now</a>
+    <a href="admin.html" data-nav="admin" class="active">Admin</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <div id="gateMessage" class="gate-message" style="display:none;">
+    <h2>Admin access required</h2>
+    <p class="tagline">You need an admin account to manage the HamNoSys database.</p>
+  </div>
+
+  <div id="adminContent" class="admin-wrap" style="display:none;">
+    <h1 class="app-heading" style="padding:0 0 4px;">HamNoSys Database</h1>
+    <p class="tagline" style="margin:0 0 24px;">
+      Add, edit, or remove signs. Each entry's HamNoSys tokens are converted to SiGML
+      automatically, on the backend, whenever this sign is used.
+    </p>
+
+    <div class="admin-grid">
+      <!-- Add / edit form -->
+      <div class="admin-panel">
+        <h2 id="formTitle">Add a sign</h2>
+        <input type="hidden" id="editId" value="" />
+
+        <div class="field">
+          <label for="glossInput">Gloss</label>
+          <input type="text" id="glossInput" placeholder="e.g. hello" />
+        </div>
+
+        <div class="field">
+          <label for="typeInput">Type</label>
+          <select id="typeInput">
+            <option value="word">word</option>
+            <option value="digit">digit</option>
+            <option value="alphabet">alphabet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="tokensInput">HamNoSys tokens</label>
+          <textarea id="tokensInput" placeholder="hamfinger2, hamthumbacrossmod, hamextfingeru, hampalml, hamshoulders"></textarea>
+          <div class="hint">Comma or newline separated. These are matched against the HamNoSys database, then converted to SiGML.</div>
+        </div>
+
+        <div class="row-btns">
+          <button type="button" id="previewBtn" class="cta-secondary">Preview SiGML</button>
+          <button type="button" id="saveBtn" class="cta-button">Add sign</button>
+          <button type="button" id="cancelEditBtn" class="cta-secondary" style="display:none;">Cancel</button>
+        </div>
+
+        <div id="formStatus" class="status"></div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>SiGML preview</label>
+          <div id="previewBox" class="preview-box">&nbsp;</div>
+        </div>
+      </div>
+
+      <!-- Sign list -->
+      <div class="admin-panel">
+        <h2>All signs (<span id="signCount">0</span>)</h2>
+        <div class="search-row">
+          <input type="text" id="searchInput" placeholder="Filter by gloss..." />
+        </div>
+        <div style="max-height:560px; overflow-y:auto;">
+          <table class="signs-table">
+            <thead>
+              <tr><th>Gloss</th><th>Type</th><th>HamNoSys tokens</th><th></th></tr>
+            </thead>
+            <tbody id="signsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal verb classifier training -->
+    <div class="admin-panel" style="margin-top:28px;">
+      <h2>Modal verb model (will / could / would / should...)</h2>
+      <p class="tagline" style="margin-top:-6px;">
+        Whether a modal verb should be signed or dropped depends on context, not a fixed rule --
+        so this is learned from labeled examples instead. Add a sentence, say which modal it's
+        about, and whether that modal should be <strong>kept</strong> (signed or spelled) or
+        <strong>dropped</strong> (no independent meaning here) in that sentence. The model
+        retrains from all examples automatically.
+      </p>
+      <div id="modalStatus" class="status" style="margin-bottom:14px;"></div>
+
+      <div class="admin-grid">
+        <div>
+          <div class="field">
+            <label for="modalSentenceInput">Sentence</label>
+            <input type="text" id="modalSentenceInput" placeholder="e.g. Could you help me?" />
+          </div>
+          <div class="field">
+            <label for="modalWordInput">Modal word</label>
+            <input type="text" id="modalWordInput" placeholder="e.g. could" />
+          </div>
+          <div class="field">
+            <label for="modalLabelInput">Label</label>
+            <select id="modalLabelInput">
+              <option value="keep">keep (carries meaning here)</option>
+              <option value="drop">drop (no independent meaning here)</option>
+            </select>
+          </div>
+          <div class="row-btns">
+            <button type="button" id="addModalExampleBtn" class="cta-button">Add example</button>
+          </div>
+          <div id="modalFormStatus" class="status"></div>
+        </div>
+
+        <div>
+          <div style="max-height:420px; overflow-y:auto;">
+            <table class="signs-table">
+              <thead>
+                <tr><th>Sentence</th><th>Modal</th><th>Label</th><th></th></tr>
+              </thead>
+              <tbody id="modalExamplesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allSigns = [];
+
+    const glossInput = document.getElementById("glossInput");
+    const typeInput = document.getElementById("typeInput");
+    const tokensInput = document.getElementById("tokensInput");
+    const editIdInput = document.getElementById("editId");
+    const formTitle = document.getElementById("formTitle");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const formStatus = document.getElementById("formStatus");
+    const previewBox = document.getElementById("previewBox");
+
+    function setFormStatus(msg, isError) {
+      formStatus.textContent = msg;
+      formStatus.style.color = isError ? "var(--error)" : "var(--teal-d)";
+    }
+
+    function resetForm() {
+      editIdInput.value = "";
+      glossInput.value = "";
+      typeInput.value = "word";
+      tokensInput.value = "";
+      formTitle.textContent = "Add a sign";
+      saveBtn.textContent = "Add sign";
+      cancelEditBtn.style.display = "none";
+      previewBox.textContent = "\u00a0";
+      setFormStatus("", false);
+    }
+
+    async function loadSigns() {
+      const res = await fetch("/api/admin/signs");
+      const data = await res.json();
+      if (!res.ok) { setFormStatus(data.error || "Could not load signs.", true); return; }
+      allSigns = data.signs;
+      renderTable();
+    }
+
+    function renderTable() {
+      const filter = document.getElementById("searchInput").value.trim().toLowerCase();
+      const tbody = document.getElementById("signsTableBody");
+      tbody.innerHTML = "";
+      const visible = allSigns.filter(s => !filter || s.gloss.toLowerCase().includes(filter));
+      document.getElementById("signCount").textContent = allSigns.length;
+
+      visible.forEach(sign => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(sign.gloss)}</strong></td>
+          <td><span class="type-pill">${escapeHtml(sign.type)}</span></td>
+          <td class="tokens">${escapeHtml((sign.hamnosys || []).join(", "))}</td>
+          <td class="row-actions">
+            <button type="button" class="edit-btn" data-id="${sign.id}">Edit</button>
+            <button type="button" class="delete-btn" data-id="${sign.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", () => startEdit(btn.dataset.id));
+      });
+      tbody.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => deleteSign(btn.dataset.id));
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function startEdit(id) {
+      const sign = allSigns.find(s => s.id === id);
+      if (!sign) return;
+      editIdInput.value = sign.id;
+      glossInput.value = sign.gloss;
+      typeInput.value = sign.type;
+      tokensInput.value = (sign.hamnosys || []).join(", ");
+      formTitle.textContent = `Edit "${sign.gloss}"`;
+      saveBtn.textContent = "Save changes";
+      cancelEditBtn.style.display = "inline-block";
+      previewBox.textContent = "\u00a0";
+      setFormStatus("", false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteSign(id) {
+      const sign = allSigns.find(s => s.id === id);
+      if (!sign) return;
+      if (!confirm(`Delete the sign for "${sign.gloss}"? This can't be undone.`)) return;
+      const res = await fetch(`/api/admin/signs/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Could not delete sign."); return; }
+      await loadSigns();
+      if (editIdInput.value === id) resetForm();
+    }
+
+    document.getElementById("previewBtn").addEventListener("click", async () => {
+      const res = await fetch("/api/admin/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gloss: glossInput.value || "preview", hamnosys: tokensInput.value })
+      });
+      const data = await res.json();
+      if (!res.ok) { previewBox.textContent = "Error: " + (data.error || "could not preview."); return; }
+      previewBox.textContent = data.sigml || "(no tokens entered)";
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      const gloss = glossInput.value.trim();
+      const type = typeInput.value;
+      const hamnosys = tokensInput.value;
+      if (!gloss) { setFormStatus("Gloss is required.", true); return; }
+      if (!hamnosys.trim()) { setFormStatus("At least one HamNoSys token is required.", true); return; }
+
+      const editId = editIdInput.value;
+      const url = editId ? `/api/admin/signs/${editId}` : "/api/admin/signs";
+      const method = editId ? "PUT" : "POST";
+
+      try {
+        setFormStatus("Saving...", false);
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gloss, type, hamnosys })
+        });
+        const data = await res.json();
+        if (!res.ok) { setFormStatus(data.error || "Could not save sign.", true); return; }
+        setFormStatus(editId ? "Sign updated." : "Sign added.", false);
+        await loadSigns();
+        resetForm();
+      } catch (err) {
+        setFormStatus("Error: " + err.message, true);
+      }
+    });
+
+    cancelEditBtn.addEventListener("click", resetForm);
+    document.getElementById("searchInput").addEventListener("input", renderTable);
+
+    // --- Modal verb classifier training UI ---
+
+    function setModalStatus(msg) {
+      const status = window.__lastModalModelStatus;
+      let base = "";
+      if (status) {
+        base = status.isTrusted
+          ? `Model is trained on ${status.totalExamples} examples (${status.keep} keep / ${status.drop} drop) and is actively deciding.`
+          : `Model has ${status.totalExamples} examples so far (${status.keep} keep / ${status.drop} drop) -- needs a few more of each before it takes over from the safe default (always keep).`;
+      }
+      document.getElementById("modalStatus").textContent = msg ? `${msg} ${base}` : base;
+    }
+
+    async function loadModalExamples() {
+      const res = await fetch("/api/admin/modal-examples");
+      const data = await res.json();
+      if (!res.ok) { setModalStatus(data.error || "Could not load examples."); return; }
+      window.__lastModalModelStatus = data.status;
+      setModalStatus("");
+      renderModalExamples(data.examples);
+    }
+
+    function renderModalExamples(examples) {
+      const tbody = document.getElementById("modalExamplesTableBody");
+      tbody.innerHTML = "";
+      examples.forEach(ex => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(ex.sentence)}</td>
+          <td><span class="type-pill">${escapeHtml(ex.modal)}</span></td>
+          <td><span class="type-pill">${escapeHtml(ex.label)}</span></td>
+          <td class="row-actions"><button type="button" class="delete-btn" data-id="${ex.id}">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => deleteModalExample(btn.dataset.id));
+      });
+    }
+
+    async function deleteModalExample(id) {
+      const res = await fetch(`/api/admin/modal-examples/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Could not delete example."); return; }
+      await loadModalExamples();
+    }
+
+    document.getElementById("addModalExampleBtn").addEventListener("click", async () => {
+      const sentence = document.getElementById("modalSentenceInput").value.trim();
+      const modal = document.getElementById("modalWordInput").value.trim();
+      const label = document.getElementById("modalLabelInput").value;
+      const statusEl = document.getElementById("modalFormStatus");
+
+      if (!sentence || !modal) { statusEl.textContent = "Sentence and modal word are both required."; return; }
+
+      try {
+        statusEl.textContent = "Saving...";
+        const res = await fetch("/api/admin/modal-examples", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sentence, modal, label })
+        });
+        const data = await res.json();
+        if (!res.ok) { statusEl.textContent = data.error || "Could not save example."; return; }
+        statusEl.textContent = "Example added.";
+        document.getElementById("modalSentenceInput").value = "";
+        document.getElementById("modalWordInput").value = "";
+        await loadModalExamples();
+      } catch (err) {
+        statusEl.textContent = "Error: " + err.message;
+      }
+    });
+
+    // --- Gate the whole page behind login + isAdmin ---
+    fetch("/api/me").then(r => r.json()).then(data => {
+      if (!data.loggedIn) { window.location.href = "login.html"; return; }
+
+      const el = document.getElementById("navAuthArea");
+      el.innerHTML = `Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+      document.getElementById("logoutLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        fetch("/api/logout", { method: "POST" }).then(() => { window.location.href = "login.html"; });
+      });
+
+      if (!data.isAdmin) {
+        document.getElementById("gateMessage").style.display = "block";
+        return;
+      }
+      document.getElementById("adminContent").style.display = "block";
+      loadSigns();
+      loadModalExamples();
+    });
+  </script>
+
+</body>
+</html>

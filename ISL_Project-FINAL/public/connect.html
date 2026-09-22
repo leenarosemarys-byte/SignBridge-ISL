@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Start a Conversation - ISL Project</title>
+<link rel="stylesheet" href="style.css?v=9" />
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home">Home</a>
+    <a href="connect.html" data-nav="conversation" class="active">Conversation</a>
+    <a href="contact.html" data-nav="contact">Contact Us</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <div class="auth-box">
+    <div class="card-header-icon"><span>💬</span></div>
+    <h2>Start a conversation</h2>
+    <p class="tagline">Create a new conversation and share the code with the other person.</p>
+
+    <button id="createBtn" type="button" class="cta-button cta-primary">
+      <span class="btn-icon">+</span>
+      Create new conversation
+    </button>
+
+    <div id="createdCodeBox" class="created-code-box">
+      <div class="share-label">Share this code:</div>
+      <div class="code-panel">
+        <input id="roomCodeDisplay" type="text" readonly placeholder="Enter code" />
+        <button id="copyCodeBtn" type="button" class="copy-button" disabled>
+          <span>📋</span>
+        </button>
+      </div>
+      <div class="button-row">
+        <a id="goSendLink" href="#" class="cta-button">I'm typing</a>
+        <a id="goWatchLink" href="#" class="cta-secondary">I'm watching signs</a>
+      </div>
+    </div>
+
+    <hr />
+
+    <div id="joinSection">
+      <p class="tagline">Already have a code? Join that conversation instead.</p>
+      <label for="joinCodeInput">Conversation code</label>
+      <div class="code-panel">
+        <input type="text" id="joinCodeInput" maxlength="6" class="room-input" placeholder="E.g. A7X9K2" />
+      </div>
+      <div id="joinError" class="error-msg"></div>
+      <div class="button-row">
+        <a id="joinSendLink" href="#" class="cta-button">I'm typing</a>
+        <a id="joinWatchLink" href="#" class="cta-secondary">I'm watching signs</a>
+      </div>
+      <button id="joinConversationBtn" type="button" class="cta-button cta-primary">Join conversation</button>
+    </div>
+  </div>
+
+  <script>
+    fetch("/api/me").then(r => r.json()).then(data => {
+      if (!data.loggedIn) { window.location.href = "login.html"; return; }
+      const el = document.getElementById("navAuthArea");
+      el.innerHTML = `Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+      document.getElementById("logoutLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        fetch("/api/logout", { method: "POST" }).then(() => { window.location.href = "login.html"; });
+      });
+    });
+
+    const createdCodeInput = document.getElementById("roomCodeDisplay");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const joinCodeInput = document.getElementById("joinCodeInput");
+    const joinError = document.getElementById("joinError");
+    const joinConversationBtn = document.getElementById("joinConversationBtn");
+
+    document.getElementById("createBtn").addEventListener("click", async () => {
+      const res = await fetch("/api/rooms", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Could not create conversation."); return; }
+      createdCodeInput.value = data.code;
+      document.getElementById("goSendLink").href = `send.html?room=${data.code}`;
+      document.getElementById("goWatchLink").href = `watch.html?room=${data.code}`;
+      copyCodeBtn.disabled = false;
+      copyCodeBtn.textContent = "📋";
+    });
+
+    copyCodeBtn.addEventListener("click", () => {
+      if (!createdCodeInput.value) return;
+      navigator.clipboard.writeText(createdCodeInput.value).then(() => {
+        copyCodeBtn.textContent = "Copied";
+        setTimeout(() => copyCodeBtn.textContent = "📋", 1400);
+      });
+    });
+
+    function updateJoinLinks() {
+      const code = joinCodeInput.value.trim().toUpperCase();
+      document.getElementById("joinSendLink").href = `send.html?room=${code}`;
+      document.getElementById("joinWatchLink").href = `watch.html?room=${code}`;
+    }
+    joinCodeInput.addEventListener("input", updateJoinLinks);
+
+    async function validateBeforeJoin(e) {
+      if (e) e.preventDefault();
+      const code = joinCodeInput.value.trim().toUpperCase();
+      joinError.textContent = "";
+      if (!code) { joinError.textContent = "Enter a conversation code first."; return false; }
+      const res = await fetch(`/api/rooms/${code}`);
+      const data = await res.json();
+      if (!res.ok) { joinError.textContent = data.error || "That code wasn't found."; return false; }
+      return true;
+    }
+
+    document.getElementById("joinSendLink").addEventListener("click", async (e) => {
+      if (!await validateBeforeJoin(e)) return;
+      window.location.href = document.getElementById("joinSendLink").href;
+    });
+
+    document.getElementById("joinWatchLink").addEventListener("click", async (e) => {
+      if (!await validateBeforeJoin(e)) return;
+      window.location.href = document.getElementById("joinWatchLink").href;
+    });
+
+    joinConversationBtn.addEventListener("click", async () => {
+      if (!await validateBeforeJoin()) return;
+      window.location.href = `send.html?room=${joinCodeInput.value.trim().toUpperCase()}`;
+    });
+  </script>
+
+</body>
+</html>

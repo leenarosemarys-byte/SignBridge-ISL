@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ISL Text/Voice to Sign Animation</title>
+<link rel="stylesheet" href="style.css?v=10" />
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home" class="active">Home</a>
+    <a href="connect.html" data-nav="conversation">Conversation</a>
+    <a href="contact.html" data-nav="contact">Contact Us</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <main>
+    <section class="hero glass-panel">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span>ISL • text and voice to sign</div>
+        <h1>Make every voice feel instantly visible.</h1>
+        <p class="tagline">
+          A live bridge between a hearing person typing or speaking and a Deaf or
+          hard-of-hearing person watching it signed back, in real time.
+        </p>
+        <div class="hero-actions">
+          <a href="connect.html" class="cta-button">Start a conversation</a>
+          <a href="#how-it-works" class="cta-secondary">See how it works</a>
+        </div>
+        <div class="hero-highlights">
+          <span>Realtime translation</span>
+          <span>Voice-enabled input</span>
+          <span>Premium avatar experience</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="orb orb-one"></div>
+        <div class="orb orb-two"></div>
+        <div class="hero-visual-card">
+          <div class="mini-stat"><span>Live status</span><strong>Ready</strong></div>
+          <div class="signal-line"></div>
+          <div class="mini-stat"><span>Recognition</span><strong>Text & voice</strong></div>
+          <div class="signal-line"></div>
+          <div class="mini-stat"><span>Output</span><strong>3D ISL avatar</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="section-card glass-panel">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>How it works</div>
+      <h2>A fluid experience from input to sign</h2>
+      <div class="steps">
+        <article class="step-card">
+          <div class="step-mark">1</div>
+          <h3>Start a conversation</h3>
+          <p>One person creates a conversation and shares the short code with the other.</p>
+        </article>
+        <article class="step-card">
+          <div class="step-mark">2</div>
+          <h3>Type or speak</h3>
+          <p>The hearing person types or speaks naturally &mdash; full sentences, words, letters, or numbers.</p>
+        </article>
+        <article class="step-card">
+          <div class="step-mark">3</div>
+          <h3>Watch it signed</h3>
+          <p>The other person watches a 3D avatar perform it in ISL, and can type a reply back.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    fetch("/api/me")
+      .then(r => r.json())
+      .then(data => {
+        const el = document.getElementById("navAuthArea");
+        if (data.loggedIn) {
+          const adminLink = data.isAdmin ? `<a href="admin.html">Admin</a> | ` : "";
+          el.innerHTML = `${adminLink}Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+          document.getElementById("logoutLink").addEventListener("click", (e) => {
+            e.preventDefault();
+            fetch("/api/logout", { method: "POST" }).then(() => location.reload());
+          });
+        } else {
+          el.innerHTML = `<a href="login.html">Login</a> | <a href="signup.html">Sign Up</a>`;
+        }
+      });
+  </script>
+
+</body>
+</html>

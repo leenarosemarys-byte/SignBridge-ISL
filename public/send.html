@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Conversation - Typing - ISL Project</title>
+<link rel="stylesheet" href="style.css?v=9" />
+<style>
+  .conv-wrap { max-width: 640px; margin: 0 auto; padding: 32px 32px 0; }
+  .room-code-pill {
+    display: inline-block; font-family: var(--font-mono); font-size: 13px;
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: 20px;
+    padding: 6px 14px; color: var(--slate); margin-bottom: 20px;
+  }
+  .transcript {
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: 16px; height: 220px; overflow-y: auto; margin-top: 24px; font-size: 14px;
+  }
+  .transcript .msg { margin-bottom: 10px; line-height: 1.4; }
+  .transcript .msg .who { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .transcript .msg.deaf .who { color: var(--teal); }
+  .transcript .msg.hearing .who { color: var(--marigold-d); }
+  .transcript .empty-hint { color: var(--slate); font-size: 13px; }
+</style>
+</head>
+<body class="page-shell">
+
+  <nav class="navbar glass-nav">
+    <div class="brand"><img src="logo.jpeg" alt="ISL sign" class="brand-logo"><span>ISL sign</span></div>
+    <a href="index.html" data-nav="home">Home</a>
+    <a href="connect.html" data-nav="conversation" class="active">Conversation</a>
+    <a href="contact.html" data-nav="contact">Contact Us</a>
+    <span class="nav-spacer"></span>
+    <span id="navAuthArea"></span>
+  </nav>
+
+  <div class="conv-wrap">
+    <h1 class="app-heading" style="padding:0;margin:24px 0 8px;">You're typing</h1>
+    <div class="room-code-pill">Conversation code: <strong id="roomCodeLabel"></strong></div>
+
+    <div class="input-box-wrapper">
+      <textarea id="userInput" rows="3" placeholder="e.g. 5   or   2 9 0"></textarea>
+      <button id="micBtn" class="mic-icon-btn" title="Speak">&#127908;</button>
+    </div>
+
+    <div class="buttons" style="margin-top:12px;">
+      <button id="sendBtn">Send</button>
+    </div>
+
+    <div id="statusMsg" class="status"></div>
+
+    <h3 style="margin-top:22px;">Recognized input</h3>
+    <div id="textOnlyBox" class="output-box">&nbsp;</div>
+
+    <h3>Sign sequence (glosses)</h3>
+    <div id="glossBox" class="output-box">&nbsp;</div>
+
+    <div class="transcript" id="transcript">
+      <div class="empty-hint">Replies from the other person will appear here.</div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const roomCode = (params.get("room") || "").toUpperCase();
+    document.getElementById("roomCodeLabel").textContent = roomCode || "(none)";
+
+    const statusEl = document.getElementById("statusMsg");
+    const inputEl = document.getElementById("userInput");
+    const textOnlyBox = document.getElementById("textOnlyBox");
+    const glossBox = document.getElementById("glossBox");
+    const transcriptEl = document.getElementById("transcript");
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    let seenCount = 0;
+    function renderMessage(m) {
+      transcriptEl.querySelector(".empty-hint")?.remove();
+      const div = document.createElement("div");
+      div.className = "msg " + m.from;
+      const who = m.from === "deaf" ? "Them" : "You";
+      div.innerHTML = `<span class="who">${who}</span><br>${m.text}`;
+      transcriptEl.appendChild(div);
+      transcriptEl.scrollTop = transcriptEl.scrollHeight;
+    }
+
+    async function pollMessages() {
+      if (!roomCode) return;
+      try {
+        const res = await fetch(`/api/rooms/${roomCode}/messages?since=${seenCount}`);
+        const data = await res.json();
+        if (res.ok && data.messages.length > 0) {
+          data.messages.forEach(renderMessage);
+          seenCount = data.total;
+        }
+      } catch (e) { /* silent retry on next tick */ }
+    }
+    setInterval(pollMessages, 1500);
+    pollMessages();
+
+    document.getElementById("sendBtn").addEventListener("click", async () => {
+      const text = inputEl.value;
+      if (!text.trim()) { setStatus("Type something first."); return; }
+      if (!roomCode) { setStatus("No conversation code in the URL."); return; }
+
+      textOnlyBox.textContent = text;
+      glossBox.textContent = "…";
+
+      try {
+        setStatus("Sending...");
+        const res = await fetch(`/api/rooms/${roomCode}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ from: "hearing", text })
+        });
+        const data = await res.json();
+        if (!res.ok) { setStatus("Error: " + (data.error || "could not send.")); return; }
+        seenCount = data.total; // this message is now included in the count
+        glossBox.textContent = (data.glosses && data.glosses.length)
+          ? data.glosses.join(", ")
+          : "(none recognized)";
+        if (data.unresolved && data.unresolved.length) {
+          setStatus(`Sent. No sign yet for: ${data.unresolved.join(", ")}`);
+        } else {
+          setStatus("Sent.");
+        }
+        renderMessage({ from: "hearing", text });
+        inputEl.value = "";
+      } catch (err) {
+        setStatus("Error: " + err.message);
+      }
+    });
+
+    const micBtn = document.getElementById("micBtn");
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognizer = new SpeechRecognition();
+      recognizer.lang = "en-IN";
+      recognizer.interimResults = false;
+      micBtn.addEventListener("click", () => { setStatus("Listening..."); recognizer.start(); });
+      recognizer.addEventListener("result", (event) => {
+        inputEl.value = event.results[0][0].transcript;
+        setStatus(`Heard: "${inputEl.value}"`);
+      });
+      recognizer.addEventListener("error", (event) => setStatus("Voice input error: " + event.error));
+    } else {
+      micBtn.disabled = true;
+      micBtn.title = "Voice input not supported in this browser (try Chrome)";
+    }
+
+    fetch("/api/me").then(r => r.json()).then(data => {
+      if (!data.loggedIn) { window.location.href = "login.html"; return; }
+      const el = document.getElementById("navAuthArea");
+      el.innerHTML = `Hi, ${data.name} | <a href="#" id="logoutLink">Logout</a>`;
+      document.getElementById("logoutLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        fetch("/api/logout", { method: "POST" }).then(() => { window.location.href = "login.html"; });
+      });
+    });
+  </script>
+
+</body>
+</html>

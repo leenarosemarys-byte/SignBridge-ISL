@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sigml>
+  <hns_sign gloss="sleep">
+    <hamnosys_nonmanual/>
+    <hamnosys_manual>
+      <hamflathand/>
+      <hamextfingeru/>
+      <hampalml/>
+      <hamear/>
+      <hamlrbeside/>
+      <hambetween/>
+      <hamforehead/>
+    </hamnosys_manual>
+  </hns_sign>
+</sigml>
